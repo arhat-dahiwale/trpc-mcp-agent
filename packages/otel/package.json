@@ -46,6 +46,8 @@
     "@types/node": "24.10.1",
     "tsup": "9.0.0",
     "typescript": "5.9.3",
-    "vitest": "5.1.0"
+    "vitest": "5.1.0",
+    "@trpc-mcp/test-utils": "workspace:*",
+    "zod": "4.6.7"
   }
 }

@@ -80,10 +80,19 @@ function serveStdio<TRouter extends AnyRouter, Ctx>(
   opts: McpServerOptions<TRouter, Ctx>
 ): Promise<void>;
 
+function createHttpHandler<TRouter extends AnyRouter, Ctx>(
+  opts: HttpHandlerOptions<TRouter, Ctx>
+): (req: Request) => Promise<Response>;
+
 interface McpServerOptions<TRouter, Ctx> extends RegistryOptions<TRouter, Ctx> {
   name: string;
   version: string;
   instructions?: string;
+}
+
+interface HttpHandlerOptions<TRouter, Ctx> extends McpServerOptions<TRouter, Ctx> {
+  /** Silence the "context factory ignores auth" creation warning. */
+  suppressAuthWarning?: boolean;
 }
 
 interface TrpcMcpServer<TRouter, Ctx> {
@@ -97,6 +106,7 @@ interface TrpcMcpServer<TRouter, Ctx> {
 
 - `createMcpServer` returns the connected-wrapped low-level SDK `Server`; pass it any MCP SDK transport (stdio, in-memory, Streamable HTTP). The context is built once per connection via `createContext` (create a fresh server per HTTP request for per-request contexts).
 - `serveStdio` connects a `StdioServerTransport`, installs SIGINT/SIGTERM shutdown, and writes nothing to stdout (protocol channel only).
+- `createHttpHandler` returns a fetch-style handler built on the SDK's `WebStandardStreamableHTTPServerTransport` in **stateless mode** (verified against SDK 1.32.2): a fresh transport + server per request, context per request from `info.request` headers. Runs unchanged on Node, Bun, Deno, Hono, Next.js Route Handlers, Cloudflare Workers. Clients must send `Accept: application/json, text/event-stream`. Sessions (stateful mode) are out of scope for v0.x. The handler warns at creation when the context factory appears to ignore authentication (source heuristic; silence with `suppressAuthWarning`).
 
 **Protocol mapping** (verified against @modelcontextprotocol/sdk 1.32.2)
 
@@ -138,21 +148,29 @@ async function toAiSdkTools<TRouter extends AnyRouter, Ctx>(
 ## `@trpc-mcp/otel`
 
 ```ts
-function withTracing(registry: ToolRegistry, opts?: { tracerName?: string }): ToolRegistry;
+function withTracing<TRegistry extends ToolRegistry>(
+  registry: TRegistry,
+  opts?: {
+    tracerName?: string;   // default "@trpc-mcp/otel"
+    recordIo?: boolean;    // default false
+    ioAttributeLimit?: number; // default 4096
+  }
+): TRegistry;
 ```
 
-**Span:** `trpc-mcp.tool.call`
+**Span:** `trpc-mcp.tool.call` (one per `registry.call`)
 
 | Attribute | Value |
 |---|---|
 | `trpc_mcp.tool.name` | tool name |
 | `trpc_mcp.tool.path` | procedure path |
 | `trpc_mcp.tool.type` | query or mutation |
-| `trpc_mcp.transport` | stdio, http, ai-sdk |
+| `trpc_mcp.transport` | stdio, http, ai-sdk (from CallOptions.transport) |
 | `trpc_mcp.result` | ok, error, denied |
 | `trpc_mcp.error.code` | on failure |
+| `trpc_mcp.io.input` / `trpc_mcp.io.output` | only with `recordIo: true`, truncated at `ioAttributeLimit` |
 
-Tool input and output are **not** recorded by default. Opt in with `recordIo: true`.
+Tool input and output are **not** recorded by default. Exceptions are recorded by code only — raw messages and stacks never reach spans. The wrapper preserves the registry's type.
 
 ---
 

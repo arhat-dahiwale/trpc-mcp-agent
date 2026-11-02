@@ -8,4 +8,6 @@
 
 export { createMcpServer } from "./server.js";
 export { serveStdio } from "./stdio.js";
+export { createHttpHandler } from "./http.js";
 export type { McpServerOptions, TrpcMcpServer } from "./types.js";
+export type { HttpHandlerOptions } from "./http.js";

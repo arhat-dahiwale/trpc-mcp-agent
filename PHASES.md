@@ -48,13 +48,13 @@ Each phase has a goal, tasks, and exit criteria. Do not start a phase until the 
 
 ## Phase 4: Policy, HTTP transport, tracing
 **Goal:** Production-shaped features.
-- [ ] Registry-level `policy(ctx, toolInfo)` filtering for list and call
-- [ ] Streamable HTTP handler (`(Request) => Promise<Response>`) with per-request context
-- [ ] Express, Hono, and Next.js route examples
-- [ ] `@trpc-mcp/otel` spans and attributes
-- [ ] Security tests: hidden tools cannot be called, errors do not leak
+- [x] Registry-level `policy(ctx, toolInfo)` filtering for list and call (built in Phase 1; HTTP/AI SDK adapters apply it)
+- [x] Streamable HTTP handler (`(Request) => Promise<Response>`) with per-request context
+- [x] Express, Hono, and Next.js route examples (Hono + Express tested; Next type-checked)
+- [x] `@trpc-mcp/otel` spans and attributes
+- [x] Security tests: hidden tools cannot be called, errors do not leak
 
-**Exit:** HTTP example works with auth headers; spans visible in a local collector.
+**Exit:** HTTP example works with auth headers; spans visible in a local collector. ✓ (HTTP tested directly + via real SDK HTTP client over node:http; spans verified with InMemorySpanExporter; live collector left for the human - see examples)
 
 ## Phase 5: Long-running tools
 **Goal:** Progress reporting for slow work.

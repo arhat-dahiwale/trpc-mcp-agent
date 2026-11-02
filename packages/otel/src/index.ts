@@ -1,2 +1,8 @@
-// Phase 0 placeholder: proves the build + test pipeline. Replaced in Phase 4.
-export const OTEL_PACKAGE_SMOKE = true;
+/**
+ * @trpc-mcp/otel
+ *
+ * OpenTelemetry tracing wrapper for tool registries (API only, BYO exporter).
+ */
+
+export { withTracing } from "./with-tracing.js";
+export type { TracingOptions } from "./with-tracing.js";

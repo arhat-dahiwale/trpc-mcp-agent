@@ -177,3 +177,26 @@ Append-only log. One entry per agent session, newest at the **bottom**. Never ed
 **Next steps:** Phase 4 - policy, HTTP transport, otel.
 
 **Status:** Phase 3 completed.
+
+**Session 1 progress (Phase 4), continued 2026-11-03:**
+
+**Work done:** (1) HTTP transport: `createHttpHandler(opts)` in @trpc-mcp/mcp returns a fetch-style `(Request) => Promise<Response>` built on the SDK's `WebStandardStreamableHTTPServerTransport` (SDK 1.32.2 delegates to it from the node transport; NO req/res shim needed). Stateless mode: fresh transport + server per request, context per request from `info.request`; transport warns at creation when the context factory looks auth-blind (heuristic on function source; suppressAuthWarning to silence). Tests: 7 direct fetch-style tests (initialize, call with bearer, anonymous denial, hidden uncallable, no stack/secret leak, malformed JSON-RPC, auth warning) + end-to-end with the REAL SDK StreamableHTTPClientTransport against a node:http server adapting req/res to fetch. (2) Examples: examples/http-hono (app.all("/mcp", (c) => handler(c.req.raw)), tested with app.request), examples/http-express (node req/res -> fetch adapter with Readable.toWeb, tested over real HTTP), examples/http-next (App Router route handler at app/mcp/route.ts, type-checked). (3) @trpc-mcp/otel: `withTracing(registry, { tracerName, recordIo, ioAttributeLimit })` - span `trpc-mcp.tool.call` with API.md attributes, result ok/error/denied, error code only (no messages/stacks), I/O opt-in and truncated, type-preserving. 5 tests with InMemorySpanExporter. Policy itself was already enforced in the core registry (Phase 1); this phase wired it through HTTP + AI SDK paths and re-tested over the wire.
+
+**Files changed:** packages/mcp/src/{http.ts,http.test.ts,index.ts}, examples/http-hono/**, examples/http-express/**, examples/http-next/**, packages/otel/src/{with-tracing.ts,with-tracing.test.ts,index.ts}, packages/otel/{package.json,vitest.config.ts}, packages/{mcp,ai-sdk}/package.json (test-utils devDeps), API.md, PHASES.md.
+
+**Dependencies added/removed:** hono@^4.10.9, express@^5.2.1 + @types/express@^5.0.5, next@16.1.1 (examples only, never published), @opentelemetry/sdk-trace-base@2.12.0 (otel devDep for in-memory exporter tests, per plan).
+
+**Verification:** full suite green (11 typecheck tasks incl. all examples; lint; test; build; check:publish). Verified at runtime BEFORE coding: WebStandardStreamableHTTPServerTransport.handleRequest(Request) -> Promise<Response>; stateless transports CANNOT be reused across requests (SDK throws) - fresh per request; requests are NOT gated on prior initialize (stateless servers answer tools/call directly); MCP spec requires Accept: application/json, text/event-stream (missing both -> "Not Acceptable" error); ErrorCode has no RequestCancelled. sdk-trace-base 2.x: span processors are constructor options (`new BasicTracerProvider({ spanProcessors: [...] })`), addSpanProcessor is gone.
+
+**Decisions made:**
+- Stateless-only HTTP in v0.x (no session management, GET/DELETE answered 405 by the transport); sessions deferred - recorded for human review.
+- Auth warning is a source-code heuristic (best-effort DX, not security).
+- otel records only error codes; recordIo is opt-in with a truncation cap.
+
+**Problems / blockers:** none. (Fixed en route: Hono handler must pass c.req.raw; Express sync-throw in promise chain -> async IIFE with try/catch; TS2742 non-portable express type -> explicit Express annotation.)
+
+**Docs updated:** API.md (http handler + otel), PHASES.md (Phase 4 ticked).
+
+**Next steps:** Phase 5 - long-running tools.
+
+**Status:** Phase 4 completed.

@@ -1,0 +1,27 @@
+{
+  "name": "@trpc-mcp/examples-http-hono",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Hono + Streamable HTTP MCP example. Never published.",
+  "type": "module",
+  "scripts": {
+    "start": "tsx server.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@trpc-mcp/core": "workspace:*",
+    "@trpc-mcp/mcp": "workspace:*",
+    "@trpc/server": "11.23.0",
+    "hono": "^4.10.9",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@trpc-mcp/test-utils": "workspace:*",
+    "@types/node": "24.10.1",
+    "tsx": "4.23.15",
+    "typescript": "5.9.3",
+    "vitest": "5.1.0"
+  }
+}
