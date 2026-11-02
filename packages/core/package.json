@@ -1,0 +1,55 @@
+{
+  "name": "@trpc-mcp/core",
+  "version": "0.1.0",
+  "description": "Turn a tRPC router into an MCP tool registry: introspection, Zod-to-JSON-Schema, policy, invocation via createCaller.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=20"
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "check:publish": "publint && attw --pack ."
+  },
+  "peerDependencies": {
+    "@trpc/server": "^11.0.0",
+    "zod": "^3.25.0 || ^4.0.0",
+    "zod-to-json-schema": "^3.24.0"
+  },
+  "peerDependenciesMeta": {
+    "zod-to-json-schema": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@trpc/server": "11.23.0",
+    "@types/node": "24.10.1",
+    "tsup": "9.0.0",
+    "typescript": "5.9.3",
+    "vitest": "5.1.0",
+    "zod": "4.6.7",
+    "zod-to-json-schema": "3.25.2"
+  }
+}
