@@ -13,7 +13,7 @@ export interface McpMeta {
     expose?: boolean;            // default false (opt-in)
     name?: string;               // override derived tool name
     title?: string;
-    description?: string;        // falls back to procedure description
+    description?: string;        // tool description (tRPC v11 procedures have no .description(); this is the only source)
     tags?: string[];
     annotations?: {
       readOnlyHint?: boolean;

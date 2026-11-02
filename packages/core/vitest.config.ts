@@ -1,6 +1,14 @@
+import { resolve } from "node:path";
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
+  resolve: {
+    alias: {
+      // Test against source so tests run without a prior build of core.
+      "@trpc-mcp/core": resolve(import.meta.dirname, "src/index.ts"),
+      "@trpc-mcp/test-utils": resolve(import.meta.dirname, "../test-utils/src/index.ts"),
+    },
+  },
   test: {
     include: ["src/**/*.test.ts", "test/**/*.test.ts"],
     typecheck: {

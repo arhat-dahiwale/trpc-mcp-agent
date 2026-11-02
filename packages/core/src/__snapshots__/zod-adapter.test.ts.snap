@@ -1,0 +1,43 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`zodToJsonSchema > snapshot (keyed by detected zod major) > zod3 search input 1`] = `
+{
+  "additionalProperties": false,
+  "properties": {
+    "limit": {
+      "maximum": 10,
+      "minimum": 1,
+      "type": "integer",
+    },
+    "query": {
+      "minLength": 1,
+      "type": "string",
+    },
+  },
+  "required": [
+    "query",
+  ],
+  "type": "object",
+}
+`;
+
+exports[`zodToJsonSchema > snapshot (keyed by detected zod major) > zod4 search input 1`] = `
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "limit": {
+      "maximum": 10,
+      "minimum": 1,
+      "type": "integer",
+    },
+    "query": {
+      "minLength": 1,
+      "type": "string",
+    },
+  },
+  "required": [
+    "query",
+  ],
+  "type": "object",
+}
+`;

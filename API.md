@@ -12,33 +12,56 @@ Part 1 is the **public library API** (what gets published). Part 2 covers the **
 
 ### `createToolRegistry(options)`
 ```ts
-function createToolRegistry<R extends AnyRouter, Ctx>(
-  options: RegistryOptions<R, Ctx>
-): ToolRegistry<R, Ctx>;
+function createToolRegistry<TRouter extends AnyRouter, Ctx>(
+  options: RegistryOptions<TRouter, Ctx>
+): ToolRegistry<TRouter, Ctx>;
 
-interface ToolRegistry<R, Ctx> {
+interface ToolRegistry<TRouter, Ctx> {
   /** All definitions, ignoring policy (for docs and startup logs) */
   definitions(): ToolDefinition[];
   /** Definitions visible to this caller after policy */
   list(ctx: Ctx): Promise<ToolDefinition[]>;
   /** Invoke by tool name. Denied and unknown tools return the same error. */
   call(name: string, input: unknown, ctx: Ctx, opts?: CallOptions): Promise<ToolCallResult>;
+  /** The router the registry was built from. */
+  readonly router: TRouter;
 }
 
 interface CallOptions {
   signal?: AbortSignal;
   onProgress?: (p: { progress: number; total?: number; message?: string }) => void;
+  /** Logical transport name; used for tracing attributes ("stdio", "http", "ai-sdk", ...). */
+  transport?: "stdio" | "http" | "ai-sdk" | (string & {});
+}
+
+interface RegistryOptions<TRouter, Ctx> {
+  router: TRouter;
+  createContext: (info: TransportInfo) => Ctx | Promise<Ctx>;
+  policy?: ToolPolicy<Ctx>;
+  include?: string[];            // glob patterns on path
+  exclude?: string[];
+  nameStrategy?: (path: string) => string;
+  errorFormatter?: (err: unknown) => { code: ToolErrorCode; message: string };
+  /** Escape hatch: convert an input/output parser to JSON Schema yourself. */
+  convertSchema?: (parser: unknown) => JsonSchema;
 }
 ```
 
 **Behavior**
-- Only procedures with `meta.mcp.expose === true` are included.
+- Only procedures with `meta.mcp.expose === true` are included (subscriptions are always skipped).
 - `call` re-checks policy before invoking (list filtering alone is not security).
-- Input is validated by the procedure's own Zod parser through `createCaller`.
-- Errors are sanitized: `TRPCError` codes map to `{code, message}`; unknown errors become `INTERNAL` with a generic message.
+- Input is validated by the procedure's own Zod parser through the tRPC caller (`router.createCaller(ctx)`, verified equivalent to `t.createCallerFactory(router)(ctx)` in tRPC 11.23.0).
+- The registry injects an `mcp` fragment (`{ progress, signal }`) into the context of every call; procedures observe `ctx.mcp.signal` and report via `ctx.mcp.progress`.
+- Errors are sanitized: `TRPCError` codes the developer throws intentionally (BAD_REQUEST, PARSE, UNPROCESSABLE_CONTENT, PAYLOAD_TOO_LARGE, UNAUTHORIZED, FORBIDDEN, NOT_FOUND, TIMEOUT, CLIENT_CLOSED_REQUEST) keep their message; everything else becomes `INTERNAL` with a generic message. Stacks and causes never cross the boundary.
+- Unknown tool and denied tool return the identical `NOT_FOUND` result (`"Tool not found."`).
+- `outputSchema` is included when the procedure defines `.output(...)`.
+- Name collisions, invalid names, and unconvertible schemas throw `ToolRegistryError` at creation time.
+
+### `zodToJsonSchema(schema, options?)`
+Adapter handling Zod v3 and v4. Auto-detects the major (`_zod` marker for v4; v3 schemas are routed to the optional peer `zod-to-json-schema`). Options: `{ zodMajor?: 3 | 4, io?: "input" | "output" }`. Both majors emit JSON Schema draft 2020-12.
 
 ### `McpMeta`
-Type for `initTRPC.meta<McpMeta>()`. See DATA.md.
+Type for `initTRPC.meta<McpMeta>()`. See DATA.md. Procedures have no description of their own in tRPC v11 (there is no `.description()` builder); the tool description comes from `meta.mcp.description` only.
 
 ### `zodToJsonSchema(schema)`
 Adapter handling Zod v3 and v4.

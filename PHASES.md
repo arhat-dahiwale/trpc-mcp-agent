@@ -4,28 +4,28 @@ Each phase has a goal, tasks, and exit criteria. Do not start a phase until the 
 
 ## Phase 0: Foundation
 **Goal:** Working monorepo with CI.
-- [ ] Check npm for `trpc-mcp` and `@trpc-mcp` scope availability; decide final names
-- [ ] pnpm workspace + Turborepo + shared tsconfig
-- [ ] ESLint, Prettier, Vitest base config
-- [ ] tsup config template (ESM + CJS + dts)
-- [ ] Changesets initialized
-- [ ] GitHub Actions: lint, typecheck, test, build on Node 20/22
-- [ ] `publint` and `attw` scripts
+- [x] Check npm for `trpc-mcp` and `@trpc-mcp` scope availability; decide final names (trpc-mcp taken; keeping @trpc-mcp/* working names — see LOGS.md)
+- [x] pnpm workspace + Turborepo + shared tsconfig
+- [x] ESLint, Prettier, Vitest base config
+- [x] tsup config template (ESM + CJS + dts)
+- [x] Changesets initialized
+- [x] GitHub Actions: lint, typecheck, test, build on Node 20/22
+- [x] `publint` and `attw` scripts
 
 **Exit:** `pnpm build && pnpm test` green locally and in CI.
 
 ## Phase 1: Core
 **Goal:** Router to tool registry.
-- [ ] Router introspection module (isolates tRPC `_def` access)
-- [ ] Zod v3/v4 to JSON Schema adapter
-- [ ] `McpMeta` type and `.meta()` integration
-- [ ] Naming strategy (`user.get` to `user_get`), collision detection
-- [ ] `createToolRegistry()`: list, get, filter
-- [ ] `invokeTool()` via `createCaller`
-- [ ] Error mapping (TRPCError to safe tool error)
-- [ ] Unit tests + snapshot tests of JSON Schemas
+- [x] Router introspection module (isolates tRPC `_def` access)
+- [x] Zod v3/v4 to JSON Schema adapter
+- [x] `McpMeta` type and `.meta()` integration
+- [x] Naming strategy (`user.get` to `user_get`), collision detection
+- [x] `createToolRegistry()`: list, get, filter
+- [x] `invokeTool()` via `createCaller`
+- [x] Error mapping (TRPCError to safe tool error)
+- [x] Unit tests + snapshot tests of JSON Schemas
 
-**Exit:** A test router produces correct tool definitions, and invocation runs middleware.
+**Exit:** A test router produces correct tool definitions, and invocation runs middleware. ✓ (55 tests pass under both zod 3.25.76 and zod 4.6.7)
 
 ## Phase 2: MCP adapter
 **Goal:** Real MCP clients can call tools.

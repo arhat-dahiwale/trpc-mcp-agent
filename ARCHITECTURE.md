@@ -42,17 +42,21 @@ Rules: adapters depend on core, never on each other. Core imports no adapter.
 1. Read all procedures from the router (isolated in `introspect.ts`).
 2. Filter to `meta.mcp.expose === true`, then apply `include` and `exclude`.
 3. Derive tool names, detect collisions, and fail fast.
-4. Convert input parsers to JSON Schema (Zod v3 or v4 adapter).
+4. Convert input parsers to JSON Schema (Zod v3 or v4 adapter; v4 via `z.toJSONSchema` from the `zod` peer, v3 via the optional peer `zod-to-json-schema` loaded with `createRequire`). Output parsers are converted too when `.output()` is defined.
 5. Derive annotations: query is read-only; mutation defaults to non-read-only; meta overrides.
 6. Freeze the definitions.
+
+Verified tRPC 11.23.0 internals: `router._def.procedures` is a flat record keyed by dotted path; procedures are async functions with `_def` (`type`, `inputs[]`, `output?`, `meta`) attached as own properties; the caller is a recursive proxy (a function), so path resolution must treat it as one.
 
 ### Tool call (runtime)
 1. Transport builds a context via `createContext(transportInfo)`.
 2. `policy(ctx, tool)` runs. Failure returns `NOT_FOUND`.
-3. `router.createCaller(ctx)` is resolved, and the procedure is called by path with the input.
+3. `router.createCaller(ctx)` is resolved (with an injected `mcp: { progress, signal }` fragment), and the procedure is called by path with the input.
 4. tRPC runs its middleware chain and Zod validation.
 5. The result or error is normalized to `ToolCallResult`.
 6. The transport serializes it (MCP content or AI SDK result).
+
+Note: the `mcp` fragment is injected on every call (progress is a no-op sink when no listener), not only for `longRunning` procedures — simpler and lets any procedure opt into progress dynamically.
 
 ## 4. Security model
 
