@@ -154,3 +154,26 @@ Append-only log. One entry per agent session, newest at the **bottom**. Never ed
 **Next steps:** Phase 3 - AI SDK adapter.
 
 **Status:** Phase 2 completed.
+
+**Session 1 progress (Phase 3), continued 2026-11-03:**
+
+**Work done:** Implemented @trpc-mcp/ai-sdk: `toAiSdkTools(options)` builds a registry, resolves the context (static `context` option or `createContext({transport:"ai-sdk"})`), filters through policy, and returns an AI SDK `ToolSet` where each execute calls `registry.call` (forwarding the model loop's abortSignal and an optional onProgress sink). Success returns the procedure data as-is; failures return structured `{ error: { code, message } }` so the model can recover. Tests (9) include a REAL generateText tool loop with MockLanguageModelV4 asserting validated input + result flow-back, middleware denial, structured BAD_REQUEST, sanitized INTERNAL, progress forwarding, abort cancellation at the tool boundary, static-context option, and convertSchema escape hatch.
+
+**Files changed:** packages/ai-sdk/src/{to-ai-sdk-tools,index}.ts, packages/ai-sdk/src/to-ai-sdk-tools.test.ts, packages/ai-sdk/package.json (+test-utils devDep), packages/ai-sdk/vitest.config.ts, API.md, PHASES.md.
+
+**Dependencies added/removed:** none new (ai@7.0.161 was already pinned as peer/devDep).
+
+**Verification:** full suite green (typecheck/lint/test/build/check:publish). Verified at runtime against ai@7.0.161 BEFORE coding: `tool({ description, inputSchema, execute })` (inputSchema, not parameters); `jsonSchema()` helper; `ToolSet` type; `ai/test` exports MockLanguageModelV3 AND V4 - v7 generateText expects the **LanguageModelV4 spec** where `finishReason` is `{ unified, raw }` and usage is `{ inputTokens: {total,noCache,cacheRead,cacheWrite}, outputTokens: {total,text,reasoning} }` (a V3-style string finishReason silently skips tool execution and the loop stops after 1 step); multi-step loops need `stopWhen: stepCountIs(n)`; when the loop's abortSignal fires, generateText itself rejects with AbortError (structured CANCELLED results are asserted at the tool execute boundary instead); Standard Schema validators must return `issues: null` when valid - tRPC 11.23 treats a truthy empty array as failure (SchemaError).
+
+**Decisions made:**
+- Toolset is built per context (call toAiSdkTools per request for per-user tools); documented in API.md.
+- Success returns raw data; failures return `{ error: { code, message } }` (documented shape).
+- ai peer range pinned to ^7.0.0 (v5/v6 have different model specs; claiming support would be untested).
+
+**Problems / blockers:** none.
+
+**Docs updated:** API.md (ai-sdk adapter), PHASES.md (Phase 3 ticked).
+
+**Next steps:** Phase 4 - policy, HTTP transport, otel.
+
+**Status:** Phase 3 completed.

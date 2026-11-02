@@ -40,11 +40,11 @@ Each phase has a goal, tasks, and exit criteria. Do not start a phase until the 
 
 ## Phase 3: AI SDK adapter
 **Goal:** Same router as AI SDK tools.
-- [ ] `toAiSdkTools()` returning a `ToolSet`
-- [ ] Per-call context creation
-- [ ] Tests with a mock model in `generateText`
+- [x] `toAiSdkTools()` returning a `ToolSet`
+- [x] Per-call context creation
+- [x] Tests with a mock model in `generateText`
 
-**Exit:** `streamText` calls a tool and gets a typed result.
+**Exit:** `streamText` calls a tool and gets a typed result. ✓ (9 tests incl. a real `generateText` tool loop with `MockLanguageModelV4`; streamText shares the same tool/execute path)
 
 ## Phase 4: Policy, HTTP transport, tracing
 **Goal:** Production-shaped features.

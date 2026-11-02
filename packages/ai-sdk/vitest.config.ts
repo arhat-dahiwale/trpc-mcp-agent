@@ -6,6 +6,7 @@ export default defineConfig({
     alias: {
       // Test against source so tests run without a prior build of core.
       "@trpc-mcp/core": resolve(import.meta.dirname, "../core/src/index.ts"),
+      "@trpc-mcp/test-utils": resolve(import.meta.dirname, "../test-utils/src/index.ts"),
     },
   },
   test: {

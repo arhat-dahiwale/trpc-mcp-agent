@@ -237,6 +237,9 @@ importers:
         specifier: workspace:*
         version: link:../core
     devDependencies:
+      '@trpc-mcp/test-utils':
+        specifier: workspace:*
+        version: link:../test-utils
       '@trpc/server':
         specifier: 11.23.0
         version: 11.23.0(typescript@5.9.3)

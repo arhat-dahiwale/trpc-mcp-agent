@@ -117,14 +117,21 @@ interface TrpcMcpServer<TRouter, Ctx> {
 ## `@trpc-mcp/ai-sdk`
 
 ```ts
-function toAiSdkTools<R, Ctx>(
-  opts: RegistryOptions<R, Ctx> & { context?: Ctx }
+async function toAiSdkTools<TRouter extends AnyRouter, Ctx>(
+  opts: RegistryOptions<TRouter, Ctx> & {
+    /** Use this context instead of calling createContext. */
+    context?: Ctx;
+    /** Receives progress events emitted via ctx.mcp.progress. */
+    onProgress?: (event: { progress: number; total?: number; message?: string }) => void;
+  }
 ): Promise<ToolSet>;
 ```
 
-- Each exposed procedure becomes `tool({ description, inputSchema, execute })`.
-- `execute` calls `registry.call` with the supplied context.
-- Errors return a structured error result so the model can recover, rather than throwing.
+- Each exposed, policy-visible procedure becomes `tool({ description, inputSchema, execute })`.
+- `inputSchema` is the procedure's JSON Schema via the AI SDK `jsonSchema()` helper (no client-side validation; tRPC validates on call).
+- `execute` calls `registry.call` with the supplied (or `createContext`-built) context and forwards the model loop's `abortSignal`.
+- Success returns the procedure's data as-is; failures return a structured `{ error: { code, message } }` result so the model can recover, rather than throwing.
+- Verified against `ai@7.0.161` (`tool({ inputSchema })`, `jsonSchema()`, `ToolSet`, `MockLanguageModelV4`).
 
 ---
 
