@@ -246,3 +246,62 @@ Append-only log. One entry per agent session, newest at the **bottom**. Never ed
 **Next steps:** Phases 0-6 complete. Final: full-suite run, overnight summary entry, stretch phases only if time remains.
 
 **Status:** Phase 6 completed.
+
+---
+
+## Session 1: 2026-11-03 | ZCode agent (GLM) | Overnight summary
+
+**Goal:** Implement Phases 0-6 of trpc-mcp autonomously; leave the repo green and documented.
+
+**Phases completed (all ticked in PHASES.md):**
+- **Phase 0 - Foundation**: pnpm 12 + Turborepo monorepo; 4 packages with tsup (ESM+CJS+dts, per-condition types); strict TS 5.9.3; ESLint 9 flat + prettier; Vitest 5 with type tests; Changesets; CI workflow (quality job + Node 20/22 x Zod 3/4 matrix via scripts/use-zod.mjs); publint + attw green.
+- **Phase 1 - Core**: introspection (isolated `_def` access), Zod v3/v4 adapter, naming with collision fail-fast, `createToolRegistry` (definitions/list/call), policy re-checked on call, uniform NOT_FOUND, sanitized errors, include/exclude globs, outputSchema, shared test router. 75 tests incl. security negatives; green under zod 3.25.76 AND 4.6.7.
+- **Phase 2 - MCP adapter**: low-level `Server` + `serveStdio`; tools/list with annotations + outputSchema; tools/call with JSON content, structuredContent, isError; progress notifications; client cancellation; 13 contract tests over InMemoryTransport + a real stdio child-process e2e (`examples/stdio-demo`, Inspector-ready).
+- **Phase 3 - AI SDK adapter**: `toAiSdkTools` -> policy-filtered `ToolSet`; real `generateText` tool loop with `MockLanguageModelV4` (9 tests).
+- **Phase 4 - Policy/HTTP/otel**: `createHttpHandler` (fetch-style, stateless, per-request context, auth-blind warning); 7 direct tests + real SDK HTTP client e2e over node:http; Hono (tested via app.request), Express (req/res adapter, tested over real HTTP), Next.js (type-checked) examples; `@trpc-mcp/otel` `withTracing` with InMemorySpanExporter tests (5).
+- **Phase 5 - Long-running tools**: documented contract (`ctx.mcp.progress`/`signal`), 8 registry-level tests (progress 5x, cancellation incl. deaf procedures, TIMEOUT races); BullMQ example (`examples/bullmq-jobs`) tested against real redis:8-alpine via Docker (auto-skips without Redis).
+- **Phase 6 - Type inference**: verified meta literals are typed `unknown` in tRPC v11 -> `mcpProcedure` brand fallback; `ExposedToolNames`/`ToolInputForName`/`ToolPathForName`/typed `callTool`; expectTypeOf suite + @ts-expect-error negatives; attw re-verified; README quickstart proven by `examples/quickstart` (compiled + executed through a real MCP client).
+
+**Phases partial:** none.
+**Phases not started:** Phase 7 (example backend + playground), Phase 8 (docs site), Phase 9 (release) - per scope.
+
+**Verification (final run, this session):**
+- `pnpm install` clean; `pnpm typecheck` 14/14; `pnpm lint` clean (incl. prettier); `pnpm test` 10/10 tasks, 110 tests (core 75, mcp 21 incl. stdio e2e, ai-sdk 9, otel 5) - full suite verified under BOTH zod 3.25.76 and zod 4.6.7; `pnpm build` 4/4; `pnpm check:publish` 8/8 (publint + attw green for all packages on node10/node16-CJS/node16-ESM/bundler).
+- `@trpc-mcp/core` is 5.1 KB min+gzip (target: <15 KB) with zero runtime dependencies (peers only).
+- CI has NOT executed (no remote push allowed tonight); the workflow file is in place and the same commands pass locally.
+
+**Morning commands for the human:**
+```bash
+pnpm install
+pnpm typecheck && pnpm lint && pnpm test && pnpm build && pnpm check:publish
+# Zod matrix (as CI runs it):
+pnpm test:zod3 && pnpm test:zod4   # restores zod 4 afterwards
+# Interactive MCP Inspector on the stdio demo (Phase 2 manual check):
+npx @modelcontextprotocol/inspector tsx examples/stdio-demo/server.ts
+# Long-running demo (needs Docker):
+docker run -d --rm --name trpc-mcp-redis -p 6399:6379 redis:8-alpine
+REDIS_URL=redis://127.0.0.1:6399 npx @modelcontextprotocol/inspector tsx examples/bullmq-jobs/server.ts
+# HTTP example:
+pnpm --filter @trpc-mcp/examples-http-hono test
+```
+
+**Needs human review:**
+1. **Package naming**: unscoped `trpc-mcp` is TAKEN on npm (0.0.1 exists). `@trpc-mcp/*` scope appears free. Working names kept per instructions; confirm scope ownership before release (Phase 9).
+2. **Stateless-only HTTP** in v0.x (no MCP sessions; GET/DELETE answer 405). Stateful/sessions deferred - decision recorded in API.md.
+3. **Sanitization policy**: developer-thrown TRPCError codes keep their messages; everything else becomes generic INTERNAL. If you want stricter (deny all messages) or looser, adjust `sanitizeError`/`errorFormatter`.
+4. **mcpProcedure double declaration**: exposure must be declared via `.meta({mcp:{expose:true}})` (runtime) AND `mcpProcedure()` (types). Verified unavoidable with tRPC 11.23.0 meta typing; alternative designs welcome.
+5. **CI not yet executed on a remote**; eslint 9.39.5 is deprecated in favor of 10.x (kept for typescript-eslint 8 compatibility); `pnpm.overrides` in package.json is ignored by pnpm 12 (must live in pnpm-workspace.yaml - scripts/use-zod.mjs handles it).
+6. **Facts corrected from the planning docs** (all recorded in earlier entries): tRPC v11 has no `.description()` builder; root `initTRPC.create({middleware})` did not run in probes; MCP SDK has no `ErrorCode.RequestCancelled`; AI SDK v7 uses LanguageModelV4 mock models and `{ unified, raw }` finish reasons; Standard Schema validators must return `issues: null`; BullMQ 6 workers need `{ connection: ioredisInstance }` with `maxRetriesPerRequest: null`; pnpm 12 replaced onlyBuiltDependencies with allowBuilds and ignores package.json#pnpm.overrides.
+
+**Known issues:**
+- vitest 5.1 `toEqualTypeOf` misreports string-literal unions; type tests use conditional-const assertions (documented in typing.test-d.ts).
+- The bullmq example suite self-skips without Redis (fail-fast probe); with Redis it runs 2 real integration tests.
+- ai peer range pinned to ^7.0.0 only (v5/v6 untested; model spec differences).
+
+**Recommended next steps:**
+1. Push the branch and let CI run; fix any matrix drift (expected: none - both zod lines verified locally).
+2. Human-review the "Needs human review" list above; confirm npm scope.
+3. Phase 7 (example backend + playground) on a fresh session; Docker Desktop is available (verified).
+4. Phase 8 (docs site, dashboards) and Phase 9 (release) after that.
+
+**Status:** Phases 0-6 completed and green. Overnight run finalized.
