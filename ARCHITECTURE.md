@@ -78,8 +78,10 @@ Note: the `mcp` fragment is injected on every call (progress is a no-op sink whe
 ## 6. Type inference strategy
 
 - Phase 1 to 5: runtime-correct with loose types.
-- Phase 6: use mapped types over the router's procedure record, filtering by `meta` typing, to produce `ExposedToolName<Router>`.
-- Constraint: tRPC meta is typed per-builder, so inference of `expose: true` literals needs `as const` or helper `mcpProcedure()`. Evaluate and document the tradeoff.
+- Phase 6: `ExposedToolNames<TRouter>` derives the union of tool names from the router type, plus `ToolInputForName` (procedure input types) and a typed `callTool()` helper.
+- **Verified constraint (@trpc/server 11.23.0):** a finalized procedure's `_def["meta"]` is typed `unknown` - meta literals do NOT survive into the router type, so `expose: true` cannot be read at the type level from plain procedures.
+- **Chosen fallback (ARCHITECTURE.md section 6 option): `mcpProcedure()`** - an identity function at runtime that brands the procedure's type (`__mcpExposed`, and `__mcpName` when called with `{ name }`). Tool names are derived from the (flat, dotted) procedure record keys via a template-literal type mirroring the default naming strategy; `mcpProcedure(p, { name: "x" })` encodes `meta.mcp.name` overrides. Tradeoff: exposure must be declared twice (brand for types, `meta.mcp.expose` for runtime); mismatches are visible (branded-but-unexposed tools are missing from listings; exposed-but-unbranded tools lack type inference). Custom `nameStrategy` and `include`/`exclude` are invisible at the type level by design.
+- No-input procedures infer `void` input (tRPC v11 behavior); `callTool` requires an explicit `undefined` argument for them.
 
 ## 7. Playground and example backend architecture
 

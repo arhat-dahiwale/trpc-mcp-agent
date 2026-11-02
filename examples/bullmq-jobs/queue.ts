@@ -21,7 +21,14 @@ let connection: IORedis | undefined;
  * see https://docs.bullmq.io/guide/connections.
  */
 export function getConnection(): IORedis {
-  connection ??= new IORedis(REDIS_URL, { maxRetriesPerRequest: null });
+  if (connection === undefined) {
+    connection = new IORedis(REDIS_URL, { maxRetriesPerRequest: null });
+    // Without a listener, ioredis "error" events crash the process when
+    // Redis is unreachable (e.g. the test suite without Docker).
+    connection.on("error", (err: Error) => {
+      console.warn(`[bullmq-example] redis connection error: ${err.message}`);
+    });
+  }
   return connection;
 }
 

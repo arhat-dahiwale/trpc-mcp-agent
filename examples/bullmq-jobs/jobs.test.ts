@@ -5,28 +5,41 @@
  */
 
 import { afterAll, describe, expect, it } from "vitest";
+import IORedis from "ioredis";
 import { createToolRegistry } from "@trpc-mcp/core";
 import { jobsRouter, type JobsContext } from "./router.js";
 import { startReportWorker } from "./worker.js";
-import { closeQueues, getReportQueue } from "./queue.js";
+import { closeQueues, REDIS_URL } from "./queue.js";
+import type { Worker } from "bullmq";
 
+/** Fails fast (no BullMQ retries) so the suite skips without Redis. */
 async function redisAvailable(): Promise<boolean> {
+  const probe = new IORedis(REDIS_URL, {
+    lazyConnect: true,
+    connectTimeout: 500,
+    maxRetriesPerRequest: 1,
+    retryStrategy: () => null,
+  });
   try {
-    const probe = await getReportQueue().getJobCounts("waiting");
-    return probe !== undefined;
+    await probe.connect();
+    return probe.status === "ready";
   } catch {
     return false;
+  } finally {
+    probe.disconnect();
   }
 }
 
-const worker = startReportWorker();
+// Started lazily: BullMQ workers open their own connections, which emit
+// unhandled "error" events when Redis is down. Skip-first avoids that.
+let worker: Worker | undefined;
 const registry = createToolRegistry<typeof jobsRouter, JobsContext>({
   router: jobsRouter,
   createContext: () => ({}),
 });
 
 afterAll(async () => {
-  await worker.close();
+  await worker?.close();
   await closeQueues();
 });
 
@@ -36,6 +49,8 @@ describe("bullmq long-running tools", () => {
       console.warn("SKIP: Redis not reachable (start docker redis for this test)");
       return;
     }
+    worker = startReportWorker();
+    worker.on("error", () => undefined); // skip-failures are asserted via results
     const events: Array<{ progress: number; message?: string }> = [];
     const result = await registry.call(
       "reports_generate",
@@ -51,6 +66,8 @@ describe("bullmq long-running tools", () => {
 
   it("cancels the wait when the caller aborts (job continues)", { timeout: 20_000 }, async () => {
     if (!(await redisAvailable())) return;
+    worker ??= startReportWorker();
+    worker.on("error", () => undefined);
     const controller = new AbortController();
     setTimeout(() => controller.abort(), 60);
     const result = await registry.call(

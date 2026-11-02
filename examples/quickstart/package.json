@@ -1,0 +1,26 @@
+{
+  "name": "@trpc-mcp/examples-quickstart",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The README quickstart, kept compiling and tested so the docs never drift. Never published.",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@trpc-mcp/core": "workspace:*",
+    "@trpc-mcp/mcp": "workspace:*",
+    "@trpc-mcp/ai-sdk": "workspace:*",
+    "@trpc/server": "11.23.0",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/sdk": "1.32.2",
+    "@trpc-mcp/test-utils": "workspace:*",
+    "@types/node": "24.10.1",
+    "typescript": "5.9.3",
+    "vitest": "5.1.0"
+  }
+}

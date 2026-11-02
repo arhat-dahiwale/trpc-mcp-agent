@@ -223,3 +223,26 @@ Append-only log. One entry per agent session, newest at the **bottom**. Never ed
 **Next steps:** Phase 6 - type inference.
 
 **Status:** Phase 5 completed.
+
+**Session 1 progress (Phase 6), continued 2026-11-03:**
+
+**Work done:** Type inference landed via the documented fallback. Verified at the type level that tRPC v11 (11.23.0) types a finalized procedure's `_def["meta"]` as `unknown` (compile-time probes), so `expose: true` literals CANNOT be filtered on from router types. Implemented: `mcpProcedure(proc[, { name }])` - identity at runtime (test asserts toBe), brand (`__mcpExposed`, `__mcpName`) at the type level, brand verified to survive t.router record typing; `ExposedToolNames<TRouter>` (flat dotted procedure record keys -> template-literal DotToUnderscore, with name overrides); `ToolInputForName`/`ToolPathForName` (via inferProcedureInput; no-input procedures infer `void` - verified); typed `callTool(registry, name, input, ctx, opts)` delegating to registry.call. Tests: typing.test-d.ts (expectTypeOf + plain conditional assertions; note: vitest 5.1 toEqualTypeOf misreports string-literal unions - documented, conditional-const style used instead) and call-tool.test.ts (runtime identity, meta-only exposure still works, typed invocation, @ts-expect-error negatives for hidden names and wrong inputs). attw + publint re-run after type work: all 4 packages green on all resolution modes. README quickstart proven: examples/quickstart mirrors README code (router + mcp-server options) and drives it through a real MCP client (list + call) - docs cannot drift. README updated (mcpProcedure + callTool + HTTP sections).
+
+**Files changed:** packages/core/src/{typing.ts,call-tool.ts,typing.test-d.ts,call-tool.test.ts,index.ts}, examples/quickstart/** , README.md, ARCHITECTURE.md (section 6 rewritten with verified facts), PHASES.md.
+
+**Dependencies added/removed:** none.
+
+**Verification:** full suite green (lint incl. prettier; test 10 tasks incl. vitest typecheck suite; typecheck 14 tasks; build; check:publish). Type-level facts verified by probes: router["_def"]["procedures"] is flat with dotted keys at the type level (nested routers flatten, matching runtime); intersection brands survive t.router; inferProcedureInput on branded procedures works (input types) but no-input procedures infer `void` (not undefined); meta is `unknown` on final procedure types.
+
+**Decisions made:**
+- mcpProcedure fallback chosen (per ARCHITECTURE.md section 6); exposure declared twice (brand + meta) - documented tradeoff.
+- Tool names derive from default strategy at the type level; custom nameStrategy/include/exclude invisible to types (documented).
+- callTool requires explicit `undefined` for no-input tools (void input type).
+
+**Problems / blockers:** none. (Fixed en route: vitest toEqualTypeOf union misreport -> conditional-const assertions; BullMQ test now self-skips fast without Redis and starts the worker lazily to avoid BullMQ internal-connection unhandled errors; TS2742-style unused-var lint in type-only test routers.)
+
+**Docs updated:** ARCHITECTURE.md (section 6), README.md, PHASES.md (Phase 6 ticked), examples/quickstart mirrors README.
+
+**Next steps:** Phases 0-6 complete. Final: full-suite run, overnight summary entry, stretch phases only if time remains.
+
+**Status:** Phase 6 completed.

@@ -53,13 +53,56 @@ Test it with the MCP Inspector:
 npx @modelcontextprotocol/inspector tsx mcp-server.ts
 ```
 
+This exact quickstart is kept compiling and tested in
+[`examples/quickstart`](./examples/quickstart), so the docs never drift.
+
+### Typed tool names (optional)
+
+tRPC v11 does not keep `.meta()` literals in router types, so wrap exposed
+procedures with `mcpProcedure()` (identity at runtime, brand at compile time)
+to get typo-proof tool names and inferred inputs:
+
+```ts
+import { mcpProcedure, callTool } from "@trpc-mcp/core";
+
+const appRouter = t.router({
+  searchNotes: mcpProcedure(
+    t.procedure
+      .meta({ mcp: { expose: true, description: "Search notes by keyword" } })
+      .input(z.object({ query: z.string().min(1) }))
+      .query(/* ... */),
+  ),
+});
+
+// `callTool` rejects unknown/hidden names and wrong inputs at compile time:
+const result = await callTool(registry, "searchNotes", { query: "pricing" }, ctx);
+```
+
+### HTTP (fetch-style)
+
+```ts
+import { createHttpHandler } from "@trpc-mcp/mcp";
+
+const handler = createHttpHandler({
+  router: appRouter,
+  name: "my-app",
+  version: "1.0.0",
+  createContext: async (info) => {
+    // info.transport === "http" -> info.request is the Web Standard Request
+    const token = info.request.headers.get("authorization") ?? "";
+    return { userId: token === "Bearer ok" ? "u1" : null };
+  },
+});
+// Works with Hono, Next.js Route Handlers, Express (via adapter), Bun, Deno...
+```
+
 ### Vercel AI SDK
 
 ```ts
 import { toAiSdkTools } from "@trpc-mcp/ai-sdk";
 import { streamText } from "ai";
 
-const tools = toAiSdkTools({ router: appRouter, createContext: () => ({ userId }) });
+const tools = await toAiSdkTools({ router: appRouter, createContext: () => ({ userId }) });
 const result = streamText({ model, tools, prompt: "Find my notes about pricing" });
 ```
 

@@ -68,12 +68,12 @@ Each phase has a goal, tasks, and exit criteria. Do not start a phase until the 
 
 ## Phase 6: Type inference
 **Goal:** Typed tool names and inputs.
-- [ ] Infer a union of exposed tool names from the router type
-- [ ] Typed `callTool(name, input)` helper for tests and clients
-- [ ] `expectTypeOf` test suite
-- [ ] Verify declarations (`attw`) after inference work
+- [x] Infer a union of exposed tool names from the router type (via mcpProcedure brand fallback; meta literals are typed unknown in tRPC v11 - verified)
+- [x] Typed `callTool(name, input)` helper for tests and clients
+- [x] `expectTypeOf` test suite (typing.test-d.ts + @ts-expect-error negative tests in call-tool.test.ts)
+- [x] Verify declarations (`attw`) after inference work (all 4 packages green on all resolution modes)
 
-**Exit:** Typos in tool names fail at compile time.
+**Exit:** Typos in tool names fail at compile time. ✓ (callTool rejects unknown/hidden names and wrong inputs at compile time; README quickstart compiled and executed as examples/quickstart)
 
 ## Phase 7: Example backend and playground
 **Goal:** Demo app.
