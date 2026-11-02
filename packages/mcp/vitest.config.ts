@@ -6,10 +6,11 @@ export default defineConfig({
     alias: {
       // Test against source so tests run without a prior build of core.
       "@trpc-mcp/core": resolve(import.meta.dirname, "../core/src/index.ts"),
+      "@trpc-mcp/test-utils": resolve(import.meta.dirname, "../test-utils/src/index.ts"),
     },
   },
   test: {
-    include: ["src/**/*.test.ts", "test/**/*.test.ts"],
+    include: ["src/**/*.test.ts", "test/**/*.test.ts", "examples/**/*.test.ts"],
     typecheck: {
       enabled: true,
       include: ["src/**/*.test-d.ts", "test/**/*.test-d.ts"],

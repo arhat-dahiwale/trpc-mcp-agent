@@ -71,29 +71,42 @@ Adapter handling Zod v3 and v4.
 ## `@trpc-mcp/mcp`
 
 ```ts
-function createMcpServer<R, Ctx>(opts: McpServerOptions<R, Ctx>): McpServer;
+function createMcpServer<TRouter extends AnyRouter, Ctx>(
+  opts: McpServerOptions<TRouter, Ctx>,
+  transportInfo: TransportInfo
+): TrpcMcpServer<TRouter, Ctx>;
 
-function serveStdio<R, Ctx>(opts: McpServerOptions<R, Ctx>): Promise<void>;
+function serveStdio<TRouter extends AnyRouter, Ctx>(
+  opts: McpServerOptions<TRouter, Ctx>
+): Promise<void>;
 
-function createHttpHandler<R, Ctx>(
-  opts: McpServerOptions<R, Ctx>
-): (req: Request) => Promise<Response>;
-
-interface McpServerOptions<R, Ctx> extends RegistryOptions<R, Ctx> {
+interface McpServerOptions<TRouter, Ctx> extends RegistryOptions<TRouter, Ctx> {
   name: string;
   version: string;
   instructions?: string;
 }
+
+interface TrpcMcpServer<TRouter, Ctx> {
+  readonly server: Server;        // low-level MCP SDK server
+  readonly registry: ToolRegistry<TRouter, Ctx>;
+  readonly transportInfo: TransportInfo;
+  connect(transport: Transport): Promise<void>;
+  close(): Promise<void>;
+}
 ```
 
-**Protocol mapping**
+- `createMcpServer` returns the connected-wrapped low-level SDK `Server`; pass it any MCP SDK transport (stdio, in-memory, Streamable HTTP). The context is built once per connection via `createContext` (create a fresh server per HTTP request for per-request contexts).
+- `serveStdio` connects a `StdioServerTransport`, installs SIGINT/SIGTERM shutdown, and writes nothing to stdout (protocol channel only).
+
+**Protocol mapping** (verified against @modelcontextprotocol/sdk 1.32.2)
 
 | MCP method | Behavior |
 |---|---|
-| `initialize` | Declares `tools` capability |
+| `initialize` | Handled by the SDK `Server`; declares `tools` capability, sends name/version/instructions |
 | `tools/list` | `registry.list(ctx)`, annotations included |
-| `tools/call` | `registry.call(...)`; success returns `content: [{type:"text", text: JSON}]` (plus `structuredContent` if output schema exists); failure returns `isError: true` |
-| `notifications/progress` | Sent for long-running tools when the client supplies a progress token |
+| `tools/call` | `registry.call(...)`; success returns `content: [{type:"text", text: JSON}]` (plus `structuredContent` when the tool declares an `outputSchema`); failure returns `isError: true` with `content` text `{"code","message"}` (sanitized) |
+| `notifications/progress` | Sent via `extra.sendNotification` when the client supplies a progress token |
+| cancellation | The SDK aborts the handler's `extra.signal`; the registry call returns `CANCELLED` and the late response is `isError: true` (the client has already moved on) |
 
 **HTTP handler notes**
 - Context is built per request from `TransportInfo.http.request` (headers, cookies, bearer token).
