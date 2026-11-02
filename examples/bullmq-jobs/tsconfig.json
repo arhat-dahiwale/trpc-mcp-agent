@@ -1,0 +1,7 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["node"]
+  },
+  "include": ["router.ts", "worker.ts", "server.ts", "jobs.test.ts"]
+}

@@ -182,6 +182,35 @@ Unknown tool and denied tool both return `NOT_FOUND` to avoid leaking hidden too
 
 ---
 
+## Long-running tools contract (Phases 5)
+
+The registry injects an `mcp` fragment into the context of EVERY call:
+
+```ts
+interface McpToolContext {
+  /** Report progress; no-op unless the transport provided a sink. */
+  progress: (value: number, total?: number, message?: string) => void;
+  /** Aborts on client cancellation or when timeoutMs elapses. */
+  signal: AbortSignal;
+}
+```
+
+- Procedures read it via their context type (`ctx.mcp?.progress(...)`); declare
+  `mcp?: McpToolContext` in your tRPC context type.
+- `meta.mcp.longRunning` documents intent and `meta.mcp.timeoutMs` bounds the call.
+- MCP: progress flows as `notifications/progress` when the client sent a
+  `progressToken`; client cancellation aborts the handler's `extra.signal`,
+  which the registry links to `ctx.mcp.signal`; the call then returns `CANCELLED`.
+- AI SDK: the model loop's `abortSignal` is forwarded; progress reaches
+  `toAiSdkTools`' `onProgress` option.
+- Timeouts: the registry races the call and returns `TIMEOUT` even if the
+  procedure ignores the signal; `ctx.mcp.signal` is aborted so well-behaved
+  procedures stop early.
+- See `examples/bullmq-jobs` for a queue-backed example (contract is
+  BullMQ-independent).
+
+---
+
 # Part 2: Playground and example backend
 
 Base URL (dev): `http://localhost:3001` (backend), `http://localhost:3000` (playground).

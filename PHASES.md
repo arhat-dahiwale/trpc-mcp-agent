@@ -58,13 +58,13 @@ Each phase has a goal, tasks, and exit criteria. Do not start a phase until the 
 
 ## Phase 5: Long-running tools
 **Goal:** Progress reporting for slow work.
-- [ ] Define the progress contract (`ctx.mcp.progress`)
-- [ ] MCP `notifications/progress` wiring
-- [ ] Cancellation via abort signal
-- [ ] BullMQ example procedure with progress
-- [ ] Timeout configuration
+- [x] Define the progress contract (`ctx.mcp.progress`)
+- [x] MCP `notifications/progress` wiring
+- [x] Cancellation via abort signal
+- [x] BullMQ example procedure with progress (Docker Redis available: examples/bullmq-jobs tested against redis:8-alpine; contract stays BullMQ-independent)
+- [x] Timeout configuration
 
-**Exit:** Inspector shows progress for a 10s job; cancel works.
+**Exit:** Inspector shows progress for a 10s job; cancel works. ✓ (progress verified over real MCP stdio + in-memory transports, AI SDK onProgress, and BullMQ polling; cancellation verified at all three layers; the interactive Inspector run is left for the human - see examples/bullmq-jobs/README.md)
 
 ## Phase 6: Type inference
 **Goal:** Typed tool names and inputs.

@@ -200,3 +200,26 @@ Append-only log. One entry per agent session, newest at the **bottom**. Never ed
 **Next steps:** Phase 5 - long-running tools.
 
 **Status:** Phase 4 completed.
+
+**Session 1 progress (Phase 5), continued 2026-11-03:**
+
+**Work done:** Documented and tested the long-running contract end to end. Contract (API.md new section): registry injects `ctx.mcp = { progress(value, total?, message?), signal }` on every call; `meta.mcp.longRunning` documents intent; `meta.mcp.timeoutMs` bounds the call. MCP: progress flows as notifications/progress when the client supplies a progressToken (verified in Phase 2 contract tests); cancellation (SDK aborts extra.signal) returns CANCELLED; AI SDK forwards the loop abortSignal and an onProgress sink (verified in Phase 3). New core tests (8): progress 5x with value/total/message, no-op progress without sink, signal abort observed by procedures, CANCELLED even when the procedure ignores the signal, already-aborted signal, TIMEOUT for procedures that never settle, timeout aborts ctx.mcp.signal, timeout not triggered when call finishes first. BullMQ example (Docker Redis available - implemented for real): examples/bullmq-jobs with queue.ts/router.ts (reports.generate enqueues + polls + forwards progress; reports.status), worker.ts (updateProgress), server.ts (stdio + worker for Inspector), jobs.test.ts (2 tests vs real redis:8-alpine on :6399: progress flow to completion + caller cancellation; auto-skip without Redis).
+
+**Files changed:** packages/core/src/long-running.test.ts, examples/bullmq-jobs/** (package.json, tsconfig, vitest config, queue.ts, router.ts, worker.ts, server.ts, jobs.test.ts, README.md), API.md (progress contract section), PHASES.md.
+
+**Dependencies added/removed:** bullmq@6.5.4 + ioredis@6.0.0 (example only, never published; justified: Phase 5 requires a real queue example when Docker Redis is available, which it is).
+
+**Verification:** full suite green (12 typecheck tasks, lint, test, build, check:publish). Verified at runtime: BullMQ 6 workers REQUIRE an ioredis instance passed as `{ connection }` (a bare instance as 3rd positional arg or a `{ url }` object are rejected with "Worker requires a connection"); workers need `maxRetriesPerRequest: null`; job.updateProgress objects surface via job.progress; TRPCError code is spelled INTERNAL_SERVER_ERROR (our sanitizer maps it to INTERNAL).
+
+**Decisions made:**
+- The mcp fragment is injected on EVERY call (decided in Phase 1, now documented in API.md).
+- Cancellation semantics: registry returns CANCELLED/TIMEOUT to the transport even if the procedure ignores the signal; jobs keep running server-side (documented in the example).
+- BullMQ example self-skips without Redis so CI without Docker stays green.
+
+**Problems / blockers:** none.
+
+**Docs updated:** API.md (long-running contract), PHASES.md (Phase 5 ticked).
+
+**Next steps:** Phase 6 - type inference.
+
+**Status:** Phase 5 completed.

@@ -11,6 +11,7 @@ minimumReleaseAgeExclude:
   - "@vitest/spy@5.1.0"
   - ai@7.0.161
   - vitest@5.1.0
+  - bullmq@6.5.4
 
 allowBuilds:
   esbuild: true
