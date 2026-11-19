@@ -383,3 +383,17 @@ pnpm --filter @trpc-mcp/examples-http-hono test
 
 **Status:** Parts 1-2 completed; 3 bugs fixed with regression tests.
 
+
+**Session 3 progress (Part 3), continued 2026-11-20:**
+
+**Work done:** Pushed the branch; CI findings and resolutions; PR and merge; repo default branch set to main.
+
+- First-ever CI runs (session 1 never had a remote): all 4 test-matrix cells failed while the quality job passed. Root cause (from Node 22 logs; Node 20 logs were masked by a vitest reporter crash - `Map.groupBy` needs Node 21+, vitest 5.1.0's error printer crashes after any suite error): "Obsolete snapshots found when no snapshot update is expected." The zod-adapter snapshot file held entries for BOTH zod majors; in CI mode vitest treats the other major's entries as obsolete. Locally this never failed because obsolete snapshots only fail the run under CI.
+- Fix (c1341bc): per-zod-major snapshot FILES (`__snapshots__/zod-adapter.zod3.snap` / `.zod4.snap`) via awaited `toMatchFileSnapshot`; each matrix cell touches only its own file. Verified locally by reproducing CI mode: `CI=true pnpm test:zod3` and `CI=true pnpm test:zod4` both 11/11 tasks green before pushing. Suite re-run green (typecheck 15, lint, test 11, build 5, check:publish 9).
+- CI: all 5 jobs green (quality + node 20/22 x zod 3/4) on PR run 44612658874.
+- PR #1 (overnight/phases-0-6 -> main) created via GitHub API (gh CLI is not installed; used the repo's stored git credentials) and merged with a MERGE COMMIT (114d9b3) per repo conventions; per-task commit history preserved.
+- The remote was empty before this session; GitHub had defaulted the repo to the first-pushed branch. Default branch set to `main`; local main checked out, synced, clean.
+
+**Verification (final, on merged main):** full suite + zod matrix re-run after merge (see "Verification" below in this block once complete; recorded honestly).
+
+**Status:** Parts 1-3 completed. Definition-of-done checklist satisfied except the post-merge suite run recorded below.
