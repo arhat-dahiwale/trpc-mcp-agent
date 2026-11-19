@@ -23,7 +23,9 @@ interface DemoContext {
 const t = initTRPC.context<DemoContext>().meta<McpMeta>().create();
 
 const requireUser = t.middleware(({ ctx, next }) => {
-  if (ctx.userId === null) {
+  // Falsy check, not `=== null`: clients can pass empty env vars, and an
+  // empty user id must not count as authentication.
+  if (!ctx.userId) {
     throw new TRPCError({ code: "UNAUTHORIZED", message: "Set MCP_USER_ID to call this tool." });
   }
   return next();
@@ -60,6 +62,7 @@ await serveStdio({
   version: "0.1.0",
   instructions: "Demo server exposing a tRPC router as MCP tools.",
   createContext: async () => ({
-    userId: process.env.MCP_USER_ID ?? null,
+    // `|| null` normalizes an empty MCP_USER_ID to "no user".
+    userId: process.env.MCP_USER_ID || null,
   }),
 });

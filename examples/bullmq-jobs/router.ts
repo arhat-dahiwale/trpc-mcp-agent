@@ -57,7 +57,11 @@ export const jobsRouter = t.router({
           }
           const state = await current.getState();
           if (state === "completed") {
-            const result = current.returnvalue as { url?: string } | undefined;
+            // getState() is a live read, but this Job instance is a snapshot
+            // fetched earlier - it can predate completion and miss the
+            // return value. Re-fetch so the URL is actually present.
+            const snapshot = (await getReportQueue().getJob(job.id ?? "")) ?? current;
+            const result = snapshot.returnvalue as { url?: string } | undefined;
             return { jobId: current.id ?? "", url: result?.url ?? "", progress: 100 };
           }
           if (state === "failed") {

@@ -9,3 +9,6 @@ coverage/
 playwright-report/
 test-results/
 *.tsbuildinfo
+.next/
+out/
+next-env.d.ts

@@ -89,6 +89,7 @@ Each phase has a goal, tasks, and exit criteria. Do not start a phase until the 
 **Exit:** `docker compose up` gives a working demo with role-based tool visibility.
 
 ## Phase 8: Docs and observability demo
+- [x] Marketing landing page (apps/landing) — static Next.js export, cream/red/black theme, glassmorphism, Framer Motion, WebGL hero shader, 3D logo, favicon
 - [ ] Docs site (quickstart, concepts, recipes, API reference)
 - [ ] OpenTelemetry + Prometheus + Grafana demo dashboards
 - [ ] README GIF and diagrams

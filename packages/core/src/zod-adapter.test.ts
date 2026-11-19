@@ -3,9 +3,11 @@ import { z } from "zod";
 import { isZodV4Schema, zodToJsonSchema } from "./zod-adapter.js";
 
 /**
- * These tests must pass under BOTH zod v3 and zod v4 (CI matrix):
- * structural assertions are version-agnostic, and the raw snapshot is
- * keyed by the detected major so each matrix cell uses its own snapshot.
+ * These tests must pass under BOTH zod v3 and v4 (CI matrix): structural
+ * assertions are version-agnostic, and the raw snapshot lives in a
+ * per-major FILE so each matrix cell touches only its own snapshot file.
+ * (A single shared file fails CI with "obsolete snapshots": the entries of
+ * the other major are unused in that cell.)
  */
 
 const isV4 = isZodV4Schema(z.object({}));
@@ -62,14 +64,16 @@ describe("zodToJsonSchema", () => {
     expect(schema.required).toEqual(["tags", "status", "nested"]);
   });
 
-  it("snapshot (keyed by detected zod major)", () => {
+  it("snapshot (per-zod-major file)", async () => {
     const schema = zodToJsonSchema(
       z.object({
         query: z.string().min(1),
         limit: z.number().int().min(1).max(10).optional(),
       }),
     );
-    expect(schema).toMatchSnapshot(isV4 ? "zod4 search input" : "zod3 search input");
+    await expect(JSON.stringify(schema, null, 2)).toMatchFileSnapshot(
+      `${import.meta.dirname}/__snapshots__/zod-adapter.zod${isV4 ? 4 : 3}.snap`,
+    );
   });
 });
 

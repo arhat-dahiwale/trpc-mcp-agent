@@ -56,6 +56,28 @@ export function createHttpHandler<TRouter extends AnyRouter, Ctx>(
   }
 
   return async (request: Request): Promise<Response> => {
+    // Stateless mode has no session for a GET SSE stream to attach to, and
+    // DELETE has no session to terminate. The SDK transport would instead
+    // open a never-completing SSE stream (GET) or return a misleading 200
+    // (DELETE), so answer 405 here - explicitly allowed by the MCP spec for
+    // servers that do not provide server-initiated streams.
+    const method = request.method.toUpperCase();
+    if (method === "GET" || method === "DELETE") {
+      return new Response(
+        JSON.stringify({
+          jsonrpc: "2.0",
+          error: { code: -32000, message: "Method Not Allowed: stateless HTTP server" },
+          id: null,
+        }),
+        {
+          status: 405,
+          headers: {
+            "content-type": "application/json",
+            allow: "POST",
+          },
+        },
+      );
+    }
     // Stateless: a fresh transport + server per request, context per request.
     const transport = new WebStandardStreamableHTTPServerTransport({
       sessionIdGenerator: undefined,
