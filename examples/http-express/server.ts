@@ -99,8 +99,8 @@ async function sendResponse(response: Response, res: import("express").Response)
 // @types/express-serve-static-core hoisting boundaries.
 const app: Express = express();
 
-// All MCP methods (POST for JSON-RPC, GET/DELETE answered 405 by the
-// stateless transport) flow through the same fetch adapter.
+// All MCP methods (POST for JSON-RPC; GET/DELETE answered 405 by the
+// handler itself - stateless mode has no session) flow through the adapter.
 app.all("/mcp", (req, res) => {
   void (async () => {
     try {

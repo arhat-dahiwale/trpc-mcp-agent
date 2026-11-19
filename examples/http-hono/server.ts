@@ -54,7 +54,8 @@ const mcpHandler = createHttpHandler({
 });
 
 // Hono handlers receive a Context; `c.req.raw` is the Web Standard Request
-// the MCP transport expects. GET/DELETE are answered by the transport itself.
+// the MCP transport expects. GET/DELETE are answered 405 by the handler
+// itself (stateless mode has no session to stream to or terminate).
 app.all("/mcp", (c) => mcpHandler(c.req.raw));
 
 // The handler is fully fetch-style: `app.fetch` runs on Node (via

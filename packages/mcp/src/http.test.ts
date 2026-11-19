@@ -178,6 +178,28 @@ describe("createHttpHandler (direct fetch-style)", () => {
       true,
     );
   });
+
+  it("answers GET with 405 instead of opening an SSE stream (stateless)", async () => {
+    // In stateless mode a GET-driven SSE stream has no session to attach to
+    // and never completes, which hangs every naive probe (curl, tests).
+    // The MCP spec explicitly allows 405 for servers without GET streams.
+    const handler = makeHandler(() => testContexts.member());
+    const response = await handler(
+      new Request("http://localhost/mcp", {
+        method: "GET",
+        headers: { accept: "application/json, text/event-stream" },
+      }),
+    );
+    expect(response.status).toBe(405);
+    await response.text(); // must complete, not stream forever
+  });
+
+  it("answers DELETE with 405 because stateless mode has no session to terminate", async () => {
+    const handler = makeHandler(() => testContexts.member());
+    const response = await handler(new Request("http://localhost/mcp", { method: "DELETE" }));
+    expect(response.status).toBe(405);
+    await response.text();
+  });
 });
 
 describe("createHttpHandler end-to-end with the SDK HTTP client", () => {
