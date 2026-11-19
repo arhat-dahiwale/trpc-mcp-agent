@@ -305,3 +305,25 @@ pnpm --filter @trpc-mcp/examples-http-hono test
 4. Phase 8 (docs site, dashboards) and Phase 9 (release) after that.
 
 **Status:** Phases 0-6 completed and green. Overnight run finalized.
+
+## Session 2: 2026-11-19 | Codex | Repository status review
+
+**Goal:** Report the current repository state.
+
+**Work done:** Read the repository instructions, phase plan, recent session logs, project manifest, and PRD open questions; inspected the working tree and recent commit history. No implementation task was started.
+
+**Files changed:** `LOGS.md` (this entry).
+
+**Dependencies added/removed:** none.
+
+**Verification:** Read-only inspection; no tests or builds run.
+
+**Decisions made:** None.
+
+**Problems / blockers:** Three PRD open questions remain: predicate-form exposure, `.output()` schema support in v0.x, and resources/prompts scope.
+
+**Docs updated:** `LOGS.md`.
+
+**Next steps:** Phase 7 - example backend and playground.
+
+**Status:** Repository status review completed; Phases 0-6 are marked complete.
