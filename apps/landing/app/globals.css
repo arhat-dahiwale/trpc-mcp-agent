@@ -1,0 +1,181 @@
+@import "tailwindcss";
+
+/*
+ * Theme: cream + red + black only.
+ * Every color here derives from #FFF8EE (cream), #C8102E (deep red)
+ * and #0A0A0A (black). No other hues anywhere on the page.
+ */
+@theme {
+  --color-cream: #fff8ee;
+  --color-cream-deep: #faf3e7;
+  --color-cream-dim: #f1e6d2;
+  --color-ink: #0a0a0a;
+  --color-ink-2: #17110d;
+  --color-ink-3: #2a1e1a;
+  --color-brand: #c8102e;
+  --color-brand-deep: #8e0b20;
+  --color-brand-bright: #e4314b;
+
+  --font-sans: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, "Cascadia Mono", monospace;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 96px;
+}
+
+body {
+  background-color: var(--color-ink);
+  color: var(--color-cream);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--color-brand) 75%, transparent);
+  color: var(--color-cream);
+}
+
+/* Static fallback surfaces for the WebGL hero + 3D logo. */
+.shader-fallback {
+  background:
+    radial-gradient(
+      120% 90% at 78% 12%,
+      rgba(200, 16, 46, 0.38) 0%,
+      rgba(142, 11, 32, 0.18) 42%,
+      rgba(10, 10, 10, 0) 72%
+    ),
+    radial-gradient(100% 80% at 12% 88%, rgba(228, 49, 75, 0.22) 0%, rgba(10, 10, 10, 0) 60%),
+    linear-gradient(160deg, #1c070c 0%, #0a0a0a 55%, #12060a 100%);
+}
+
+.logo-fallback-glow {
+  filter: drop-shadow(0 0 42px rgba(200, 16, 46, 0.35));
+}
+
+@layer components {
+  /* Frosted panel on dark sections. */
+  .glass-dark {
+    background: color-mix(in srgb, #0a0a0a 55%, transparent);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+    backdrop-filter: blur(18px) saturate(140%);
+    border: 1px solid color-mix(in srgb, #fff8ee 12%, transparent);
+    box-shadow: inset 0 1px 0 0 color-mix(in srgb, #fff8ee 7%, transparent);
+  }
+
+  /* Frosted panel on cream sections. */
+  .glass-light {
+    background: color-mix(in srgb, #fff8ee 62%, transparent);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+    border: 1px solid color-mix(in srgb, #0a0a0a 9%, transparent);
+    box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.65);
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border-radius: 9999px;
+    padding: 6px 14px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, #e4314b 85%, #fff8ee);
+    background: color-mix(in srgb, #c8102e 14%, transparent);
+    border: 1px solid color-mix(in srgb, #c8102e 38%, transparent);
+  }
+
+  .chip-on-light {
+    color: var(--color-brand);
+    background: color-mix(in srgb, #c8102e 8%, transparent);
+    border-color: color-mix(in srgb, #c8102e 30%, transparent);
+  }
+
+  .cta-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    border-radius: 9999px;
+    padding: 14px 28px;
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--color-cream);
+    background: var(--color-brand);
+    border: 1px solid color-mix(in srgb, #fff8ee 25%, transparent);
+    box-shadow: 0 8px 32px -8px color-mix(in srgb, #c8102e 65%, transparent);
+    transition:
+      transform 200ms ease,
+      background-color 200ms ease,
+      box-shadow 200ms ease;
+  }
+  .cta-primary:hover {
+    background: var(--color-brand-deep);
+    transform: translateY(-2px);
+    box-shadow: 0 14px 36px -8px color-mix(in srgb, #c8102e 75%, transparent);
+  }
+
+  .cta-ghost {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    border-radius: 9999px;
+    padding: 14px 28px;
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--color-cream);
+    background: color-mix(in srgb, #fff8ee 6%, transparent);
+    border: 1px solid color-mix(in srgb, #fff8ee 22%, transparent);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    transition:
+      transform 200ms ease,
+      border-color 200ms ease,
+      background-color 200ms ease;
+  }
+  .cta-ghost:hover {
+    border-color: color-mix(in srgb, #fff8ee 45%, transparent);
+    background: color-mix(in srgb, #fff8ee 12%, transparent);
+    transform: translateY(-2px);
+  }
+}
+
+/* Code token colors (cream/red family only). */
+.tok-comment {
+  color: color-mix(in srgb, #fff8ee 40%, transparent);
+  font-style: italic;
+}
+.tok-string {
+  color: #fff8ee;
+}
+.tok-keyword {
+  color: var(--color-brand-bright);
+}
+.tok-api {
+  color: color-mix(in srgb, #fff8ee 92%, #e4314b);
+  font-weight: 500;
+}
+.tok-plain {
+  color: color-mix(in srgb, #fff8ee 62%, transparent);
+}
+.tok-prompt {
+  color: var(--color-brand-bright);
+  font-weight: 600;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

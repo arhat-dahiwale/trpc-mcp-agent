@@ -8,3 +8,8 @@ test-results/
 *.md
 packages/*/README.md
 packages/*/CHANGELOG.md
+apps/landing/.next/
+apps/landing/out/
+apps/landing/fonts/
+apps/landing/app/favicon.ico
+apps/landing/next-env.d.ts
